@@ -123,7 +123,7 @@ const Index = () => {
               <Link to="/vendor-signup">Start Your Free Store Today</Link>
             </Button>
             <Button size="lg" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-primary" asChild>
-              <Link to="/browse">Explore Local Products</Link>
+              <Link to="/browse">Shop Local Products</Link>
             </Button>
           </div>
           <div className="flex items-center justify-center space-x-6 mt-8 text-white/80">
