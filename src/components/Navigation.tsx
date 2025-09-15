@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ShoppingBag, User, LogOut, Store } from "lucide-react";
+import { ShoppingBag, User, LogOut, Store, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +54,12 @@ export const Navigation = () => {
                     <Link to="/vendor-dashboard" className="flex items-center">
                       <Store className="w-4 h-4 mr-2" />
                       Vendor Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" className="flex items-center">
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin Panel
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut}>
