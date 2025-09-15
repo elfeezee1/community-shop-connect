@@ -4,44 +4,115 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Star, ShoppingCart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
-const sampleProducts = [
-  {
-    id: 1,
-    name: "Fresh Organic Bread",
-    price: 850,
-    vendor: "Maya's Bakery",
-    location: "Ikeja, Lagos",
-    image: "/placeholder.svg",
-    rating: 4.8,
-    stock: 12,
-    category: "Food & Beverages"
-  },
-  {
-    id: 2,
-    name: "Handcrafted Leather Bag",
-    price: 15000,
-    vendor: "Artisan Crafts",
-    location: "Victoria Island, Lagos",
-    image: "/placeholder.svg",
-    rating: 4.9,
-    stock: 5,
-    category: "Fashion & Accessories"
-  },
-  {
-    id: 3,
-    name: "Fresh Pepper Soup Spices",
-    price: 1200,
-    vendor: "Mama Kemi's Kitchen",
-    location: "Surulere, Lagos",
-    image: "/placeholder.svg",
-    rating: 4.7,
-    stock: 25,
-    category: "Food & Beverages"
-  }
-];
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  quantity_in_stock: number;
+  images: string[];
+  vendor: {
+    business_name: string;
+    city: string;
+    state: string;
+  };
+  category?: {
+    name: string;
+  };
+}
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 const Browse = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          vendor:vendors (
+            business_name,
+            city,
+            state
+          ),
+          category:categories (
+            name
+          )
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const handleAddToCart = async (productId: string) => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add items to your cart",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    await addToCart(productId, 1);
+    toast({
+      title: "Added to cart",
+      description: "Product added to your cart successfully!"
+    });
+  };
+
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = selectedCategory === "All" || product.category?.name === selectedCategory;
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         product.vendor.business_name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -61,6 +132,8 @@ const Browse = () => {
               <Input 
                 placeholder="Search for products, vendors, or categories..." 
                 className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             <Button variant="hero">
@@ -70,69 +143,93 @@ const Browse = () => {
           </div>
           
           <div className="flex flex-wrap gap-2">
-            {["All", "Food & Beverages", "Fashion", "Electronics", "Beauty", "Home & Garden"].map((category) => (
+            <Badge 
+              variant={selectedCategory === "All" ? "default" : "secondary"}
+              className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+              onClick={() => setSelectedCategory("All")}
+            >
+              All
+            </Badge>
+            {categories.map((category) => (
               <Badge 
-                key={category} 
-                variant={category === "All" ? "default" : "secondary"}
+                key={category.id} 
+                variant={selectedCategory === category.name ? "default" : "secondary"}
                 className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => setSelectedCategory(category.name)}
               >
-                {category}
+                {category.name}
               </Badge>
             ))}
           </div>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sampleProducts.map((product) => (
-            <Card key={product.id} className="overflow-hidden hover:shadow-card transition-all duration-300 group">
-              <div className="aspect-square bg-muted relative overflow-hidden">
-                <img 
-                  src={product.image} 
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <Badge className="absolute top-3 left-3 bg-primary">
-                  {product.stock} in stock
-                </Badge>
-              </div>
-              <CardContent className="p-4">
-                <div className="space-y-2">
-                  <Badge variant="outline" className="text-xs">
-                    {product.category}
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="text-lg text-muted-foreground">Loading products...</div>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-lg text-muted-foreground">No products found</div>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProducts.map((product) => (
+              <Card key={product.id} className="overflow-hidden hover:shadow-card transition-all duration-300 group">
+                <div className="aspect-square bg-muted relative overflow-hidden">
+                  <img 
+                    src={product.images?.[0] || "/placeholder.svg"} 
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <Badge className="absolute top-3 left-3 bg-primary">
+                    {product.quantity_in_stock} in stock
                   </Badge>
-                  <h3 className="font-semibold text-lg text-foreground">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-primary">
-                      ₦{product.price.toLocaleString()}
-                    </span>
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 fill-secondary text-secondary" />
-                      <span className="text-sm font-medium">{product.rating}</span>
+                </div>
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    {product.category && (
+                      <Badge variant="outline" className="text-xs">
+                        {product.category.name}
+                      </Badge>
+                    )}
+                    <h3 className="font-semibold text-lg text-foreground">
+                      {product.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {product.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-primary">
+                        ₦{product.price.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      by <span className="font-medium text-foreground">{product.vendor.business_name}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      {product.vendor.city}, {product.vendor.state}
                     </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    by <span className="font-medium text-foreground">{product.vendor}</span>
+                  <div className="flex gap-2 mt-4">
+                    <Button 
+                      variant="hero" 
+                      className="flex-1"
+                      onClick={() => handleAddToCart(product.id)}
+                      disabled={product.quantity_in_stock === 0}
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      {product.quantity_in_stock === 0 ? "Out of Stock" : "Add to Cart"}
+                    </Button>
+                    <Button variant="outline" size="icon">
+                      <Star className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <MapPin className="w-3 h-3 mr-1" />
-                    {product.location}
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <Button variant="hero" className="flex-1">
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Add to Cart
-                  </Button>
-                  <Button variant="outline" size="icon">
-                    <Star className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
         
         <div className="text-center mt-12">
           <Button variant="outline" size="lg">
