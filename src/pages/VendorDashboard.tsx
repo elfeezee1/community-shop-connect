@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit, Trash2, Package } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Upload, X, Image as ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Product {
@@ -21,6 +21,7 @@ interface Product {
   quantity_in_stock: number;
   category: { name: string };
   is_active: boolean;
+  images: string[];
 }
 
 interface Category {
@@ -41,6 +42,9 @@ const VendorDashboard = () => {
     category_id: ''
   });
   const [loading, setLoading] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -114,13 +118,97 @@ const VendorDashboard = () => {
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Validate file types and sizes
+    const validFiles = files.filter(file => {
+      const isValidType = file.type.startsWith('image/');
+      const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
+      
+      if (!isValidType) {
+        toast({
+          title: "Invalid file type",
+          description: `${file.name} is not an image file`,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      if (!isValidSize) {
+        toast({
+          title: "File too large",
+          description: `${file.name} must be less than 5MB`,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    // Limit to 5 images total
+    const totalImages = uploadedImages.length + validFiles.length;
+    if (totalImages > 5) {
+      toast({
+        title: "Too many images",
+        description: "Maximum 5 images per product",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadedImages(prev => [...prev, ...validFiles]);
+    
+    // Create preview URLs
+    validFiles.forEach(file => {
+      const url = URL.createObjectURL(file);
+      setImagePreviewUrls(prev => [...prev, url]);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    // Revoke the object URL to prevent memory leaks
+    URL.revokeObjectURL(imagePreviewUrls[index]);
+    
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImages = async (productId: string) => {
+    const imageUrls: string[] = [];
+    
+    for (let i = 0; i < uploadedImages.length; i++) {
+      const file = uploadedImages[i];
+      const fileName = `${productId}/${Date.now()}-${file.name}`;
+      
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(`${vendor.id}/${fileName}`, file);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(data.path);
+
+      imageUrls.push(urlData.publicUrl);
+    }
+    
+    return imageUrls;
+  };
+
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!vendor) return;
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      // First create the product
+      const { data: productData, error: productError } = await supabase
         .from('products')
         .insert({
           vendor_id: vendor.id,
@@ -129,15 +217,34 @@ const VendorDashboard = () => {
           price: parseFloat(productForm.price),
           quantity_in_stock: parseInt(productForm.quantity_in_stock),
           category_id: productForm.category_id || null
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (productError) throw productError;
+
+      // Upload images if any
+      let imageUrls: string[] = [];
+      if (uploadedImages.length > 0) {
+        imageUrls = await uploadImages(productData.id);
+      }
+
+      // Update product with image URLs
+      if (imageUrls.length > 0) {
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ images: imageUrls })
+          .eq('id', productData.id);
+
+        if (updateError) throw updateError;
+      }
 
       toast({
         title: "Success",
         description: "Product added successfully!"
       });
 
+      // Reset form
       setProductForm({
         name: '',
         description: '',
@@ -145,6 +252,8 @@ const VendorDashboard = () => {
         quantity_in_stock: '',
         category_id: ''
       });
+      setUploadedImages([]);
+      setImagePreviewUrls([]);
       setShowAddProduct(false);
       fetchVendorData();
     } catch (error: any) {
@@ -282,6 +391,58 @@ const VendorDashboard = () => {
                   </div>
                 </div>
 
+                {/* Image Upload Section */}
+                <div className="space-y-2">
+                  <Label>Product Images (Optional)</Label>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadedImages.length >= 5}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Choose Images
+                      </Button>
+                      <span className="text-sm text-muted-foreground">
+                        {uploadedImages.length}/5 images • Max 5MB each
+                      </span>
+                    </div>
+
+                    {imagePreviewUrls.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {imagePreviewUrls.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={url}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg border"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-1 right-1 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => removeImage(index)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex gap-2">
                   <Button type="submit" disabled={loading}>
                     {loading ? "Adding..." : "Add Product"}
@@ -297,23 +458,48 @@ const VendorDashboard = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (
-            <Card key={product.id} className="shadow-soft">
-              <CardContent className="p-6">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-foreground">{product.name}</h3>
-                    <Badge variant={product.is_active ? "default" : "secondary"}>
-                      {product.is_active ? "Active" : "Inactive"}
+            <Card key={product.id} className="shadow-card hover:shadow-lg transition-shadow overflow-hidden">
+              {/* Product Image */}
+              <div className="relative h-48 bg-muted">
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                )}
+                
+                <div className="absolute top-2 right-2">
+                  <Badge variant={product.is_active ? "default" : "secondary"}>
+                    {product.is_active ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+
+                {product.images && product.images.length > 1 && (
+                  <div className="absolute bottom-2 right-2">
+                    <Badge variant="outline" className="text-xs bg-white/90">
+                      +{product.images.length - 1} more
                     </Badge>
                   </div>
+                )}
+              </div>
+
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-foreground line-clamp-1">{product.name}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                      {product.description}
+                    </p>
+                  </div>
                   
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {product.description}
-                  </p>
-                  
-                  <div className="flex justify-between text-sm">
-                    <span className="text-foreground">Price: ₦{product.price}</span>
-                    <span className="text-foreground">Stock: {product.quantity_in_stock}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold text-primary">₦{product.price.toLocaleString()}</span>
+                    <span className="text-sm text-muted-foreground">Stock: {product.quantity_in_stock}</span>
                   </div>
                   
                   {product.category && (
@@ -323,11 +509,11 @@ const VendorDashboard = () => {
                   )}
                   
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" className="flex-1">
                       <Edit className="w-3 h-3 mr-1" />
                       Edit
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" className="flex-1">
                       <Trash2 className="w-3 h-3 mr-1" />
                       Delete
                     </Button>
