@@ -9,13 +9,15 @@ import { AdminLayout } from "@/layouts/AdminLayout";
 import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import Auth from "./pages/Auth";
-import VendorSignup from "./pages/VendorSignup";
 import VendorDashboard from "./pages/VendorDashboard";
+import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminVendors from "./pages/admin/AdminVendors";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
+import VendorSignin from "./pages/vendor/VendorSignin";
+import VendorSignup from "./pages/vendor/VendorSignup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,10 +34,14 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/browse" element={<Browse />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/vendor-signup" element={<VendorSignup />} />
               <Route path="/vendor-dashboard" element={<VendorDashboard />} />
               
+              {/* Vendor Routes */}
+              <Route path="/vendor/signin" element={<VendorSignin />} />
+              <Route path="/vendor/signup" element={<VendorSignup />} />
+              
               {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
