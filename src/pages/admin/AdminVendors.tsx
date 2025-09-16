@@ -66,22 +66,43 @@ export default function AdminVendors() {
 
   const fetchVendors = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: vendorRows, error: vendorError } = await supabase
         .from('vendors')
-        .select(`
-          *,
-          profiles!inner(username)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setVendors(data as unknown as Vendor[] || []);
+      if (vendorError) throw vendorError;
+
+      // If we have vendors, fetch their usernames separately (no FK required)
+      let enrichedVendors: Vendor[] = (vendorRows as unknown as Vendor[]) || [];
+      const userIds = Array.from(new Set(enrichedVendors.map(v => v.user_id))).filter(Boolean);
+
+      if (userIds.length > 0) {
+        const { data: profileRows, error: profileError } = await supabase
+          .from('profiles')
+          .select('user_id, username')
+          .in('user_id', userIds);
+
+        if (!profileError && profileRows) {
+          const profileMap = new Map<string, string>(
+            profileRows.map((p: any) => [p.user_id, p.username])
+          );
+          enrichedVendors = enrichedVendors.map(v => ({
+            ...v,
+            profiles: profileMap.has(v.user_id)
+              ? { username: profileMap.get(v.user_id)! }
+              : null,
+          }));
+        }
+      }
+
+      setVendors(enrichedVendors);
     } catch (error) {
       console.error('Error fetching vendors:', error);
       toast({
-        title: "Error",
-        description: "Failed to load vendors",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to load vendors',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
