@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Star, ShoppingCart } from "lucide-react";
+import { Search, MapPin, Star, ShoppingCart, Package } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
@@ -89,6 +89,14 @@ const Browse = () => {
     }
   };
 
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return null;
+    const { data } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(imagePath);
+    return data.publicUrl;
+  };
+
   const handleAddToCart = async (productId: string) => {
     if (!user) {
       toast({
@@ -172,19 +180,34 @@ const Browse = () => {
             <div className="text-lg text-muted-foreground">No products found</div>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-card transition-all duration-300 group">
-                <div className="aspect-square bg-muted relative overflow-hidden">
-                  <img 
-                    src={product.images?.[0] || "/placeholder.svg"} 
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <Badge className="absolute top-3 left-3 bg-primary">
-                    {product.quantity_in_stock} in stock
-                  </Badge>
-                </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProducts.map((product) => {
+              const mainImage = product.images && product.images.length > 0 ? product.images[0] : null;
+              const imageUrl = mainImage ? getImageUrl(mainImage) : null;
+              
+              return (
+                <Card key={product.id} className="overflow-hidden hover:shadow-card transition-all duration-300 group">
+                  <div className="aspect-square bg-gradient-subtle relative overflow-hidden">
+                    {imageUrl ? (
+                      <img 
+                        src={imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-16 h-16 text-muted-foreground/40" />
+                      </div>
+                    )}
+                    <Badge className="absolute top-3 left-3 bg-primary">
+                      {product.quantity_in_stock} in stock
+                    </Badge>
+                    {product.images && product.images.length > 1 && (
+                      <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
+                        +{product.images.length - 1}
+                      </Badge>
+                    )}
+                  </div>
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     {product.category && (
@@ -226,8 +249,9 @@ const Browse = () => {
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
         
