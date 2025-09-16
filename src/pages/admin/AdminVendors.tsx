@@ -70,7 +70,7 @@ export default function AdminVendors() {
         .from('vendors')
         .select(`
           *,
-          profiles!vendors_user_id_fkey (username)
+          profiles!inner(username)
         `)
         .order('created_at', { ascending: false });
 
