@@ -47,7 +47,7 @@ const VendorDashboard = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/auth');
+      navigate('/vendor/signin');
       return;
     }
     fetchVendorData();

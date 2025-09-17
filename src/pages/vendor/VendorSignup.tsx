@@ -56,8 +56,8 @@ const VendorSignup = () => {
     setLoading(true);
 
     try {
-      // Create user account first
-      const { error: authError } = await signUp(email, password);
+      // Create user account first with vendor role
+      const { error: authError } = await signUp(email, password, { role: 'vendor' });
 
       if (authError) {
         throw authError;

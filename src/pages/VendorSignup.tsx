@@ -27,7 +27,7 @@ const VendorSignup = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/auth');
+      navigate('/vendor/signin');
     }
   }, [user, navigate]);
 

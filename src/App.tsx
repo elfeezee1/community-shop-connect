@@ -9,6 +9,7 @@ import { AdminLayout } from "@/layouts/AdminLayout";
 import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import Auth from "./pages/Auth";
+import CustomerAuth from "./pages/customer/CustomerAuth";
 import VendorDashboard from "./pages/VendorDashboard";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/browse" element={<Browse />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/customer/auth" element={<CustomerAuth />} />
               <Route path="/vendor-dashboard" element={<VendorDashboard />} />
               
               {/* Vendor Routes */}
