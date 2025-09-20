@@ -10,6 +10,11 @@ import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import Auth from "./pages/Auth";
 import CustomerAuth from "./pages/customer/CustomerAuth";
+import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import CustomerProfile from "./pages/customer/CustomerProfile";
+import CustomerOrders from "./pages/customer/CustomerOrders";
+import ContactUs from "./pages/customer/ContactUs";
+import Cart from "./pages/customer/Cart";
 import VendorDashboard from "./pages/VendorDashboard";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -36,6 +41,11 @@ const App = () => (
               <Route path="/browse" element={<Browse />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/customer/auth" element={<CustomerAuth />} />
+              <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+              <Route path="/customer/profile" element={<CustomerProfile />} />
+              <Route path="/customer/orders" element={<CustomerOrders />} />
+              <Route path="/contact-us" element={<ContactUs />} />
+              <Route path="/cart" element={<Cart />} />
               <Route path="/vendor-dashboard" element={<VendorDashboard />} />
               
               {/* Vendor Routes */}
