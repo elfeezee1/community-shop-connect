@@ -23,7 +23,7 @@ export const Hero = () => {
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" variant="community" asChild>
-                <Link to="/vendor-signup">
+                <Link to="/vendor/signup">
                   <Store className="w-5 h-5 mr-2" />
                   Start Your Store
                   <ArrowRight className="w-5 h-5 ml-2" />

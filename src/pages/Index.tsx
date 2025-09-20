@@ -120,7 +120,7 @@ const Index = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="community" asChild>
-              <Link to="/vendor-signup">Start Your Free Store Today</Link>
+              <Link to="/vendor/signup">Start Your Free Store Today</Link>
             </Button>
             <Button size="lg" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-primary" asChild>
               <Link to="/browse">Shop Local Products</Link>
