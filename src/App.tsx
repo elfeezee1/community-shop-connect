@@ -16,6 +16,7 @@ import CustomerOrders from "./pages/customer/CustomerOrders";
 import ContactUs from "./pages/customer/ContactUs";
 import Cart from "./pages/customer/Cart";
 import VendorDashboard from "./pages/VendorDashboard";
+import VendorCustomers from "./pages/vendor/VendorCustomers";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/contact-us" element={<ContactUs />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+              <Route path="/vendor/customers" element={<VendorCustomers />} />
               
               {/* Vendor Routes */}
               <Route path="/vendor/signin" element={<VendorSignin />} />

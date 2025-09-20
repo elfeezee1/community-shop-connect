@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ShoppingBag, User, LogOut, Store, Shield, UserCircle, Package, Phone, Settings } from "lucide-react";
+import { ShoppingBag, User, LogOut, Store, Shield, UserCircle, Package, Phone, Settings, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -35,21 +35,23 @@ export const Navigation = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-primary-foreground hover:text-secondary relative"
-              asChild
-            >
-              <Link to="/cart">
-                <ShoppingBag className="w-5 h-5" />
-                {user && getCartItemCount() > 0 && (
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs bg-secondary">
-                    {getCartItemCount()}
-                  </Badge>
-                )}
-              </Link>
-            </Button>
+            {(!roleLoading && role === 'customer') && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-primary-foreground hover:text-secondary relative"
+                asChild
+              >
+                <Link to="/cart">
+                  <ShoppingBag className="w-5 h-5" />
+                  {user && getCartItemCount() > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs bg-secondary">
+                      {getCartItemCount()}
+                    </Badge>
+                  )}
+                </Link>
+              </Button>
+            )}
             
             {user ? (
               <DropdownMenu>
@@ -89,12 +91,20 @@ export const Navigation = () => {
                   )}
                   
                   {!roleLoading && role === 'vendor' && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/vendor-dashboard" className="flex items-center">
-                        <Store className="w-4 h-4 mr-2" />
-                        Vendor Dashboard
-                      </Link>
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/vendor-dashboard" className="flex items-center">
+                          <Store className="w-4 h-4 mr-2" />
+                          Vendor Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/vendor/customers" className="flex items-center">
+                          <Users className="w-4 h-4 mr-2" />
+                          My Customers
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
                   )}
                   
                   {!roleLoading && role === 'admin' && (
