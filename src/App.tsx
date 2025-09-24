@@ -17,6 +17,8 @@ import ContactUs from "./pages/customer/ContactUs";
 import Cart from "./pages/customer/Cart";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorCustomers from "./pages/vendor/VendorCustomers";
+import VendorSupport from "./pages/vendor/VendorSupport";
+import VendorProfile from "./pages/vendor/VendorProfile";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -53,6 +55,8 @@ const App = () => (
               {/* Vendor Routes */}
               <Route path="/vendor/signin" element={<VendorSignin />} />
               <Route path="/vendor/signup" element={<VendorSignup />} />
+              <Route path="/vendor/support" element={<VendorSupport />} />
+              <Route path="/vendor/profile" element={<VendorProfile />} />
               
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />

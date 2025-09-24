@@ -99,9 +99,15 @@ export const Navigation = () => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/vendor/customers" className="flex items-center">
-                          <Users className="w-4 h-4 mr-2" />
-                          My Customers
+                        <Link to="/vendor/support" className="flex items-center">
+                          <Phone className="w-4 h-4 mr-2" />
+                          Support
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/vendor/profile" className="flex items-center">
+                          <UserCircle className="w-4 h-4 mr-2" />
+                          Profile
                         </Link>
                       </DropdownMenuItem>
                     </>
