@@ -15,6 +15,8 @@ import CustomerProfile from "./pages/customer/CustomerProfile";
 import CustomerOrders from "./pages/customer/CustomerOrders";
 import ContactUs from "./pages/customer/ContactUs";
 import Cart from "./pages/customer/Cart";
+import Checkout from "./pages/customer/Checkout";
+import PaymentCallback from "./pages/customer/PaymentCallback";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorCustomers from "./pages/vendor/VendorCustomers";
 import VendorSupport from "./pages/vendor/VendorSupport";
@@ -49,6 +51,8 @@ const App = () => (
               <Route path="/customer/orders" element={<CustomerOrders />} />
               <Route path="/contact-us" element={<ContactUs />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/payment/callback" element={<PaymentCallback />} />
               <Route path="/vendor-dashboard" element={<VendorDashboard />} />
               <Route path="/vendor/customers" element={<VendorCustomers />} />
               
