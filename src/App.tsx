@@ -29,6 +29,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
 import VendorSignin from "./pages/vendor/VendorSignin";
 import VendorSignup from "./pages/vendor/VendorSignup";
+import VendorOrders from "./pages/vendor/VendorOrders";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/vendor/signup" element={<VendorSignup />} />
               <Route path="/vendor/support" element={<VendorSupport />} />
               <Route path="/vendor/profile" element={<VendorProfile />} />
+              <Route path="/vendor/orders" element={<VendorOrders />} />
               
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
