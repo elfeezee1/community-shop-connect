@@ -11,7 +11,9 @@ interface CartItem {
     name: string;
     price: number;
     images: string[];
+    vendor_id: string;
     vendor: {
+      id: string;
       business_name: string;
     };
   };
@@ -62,7 +64,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
             name,
             price,
             images,
+            vendor_id,
             vendor:vendors (
+              id,
               business_name
             )
           )

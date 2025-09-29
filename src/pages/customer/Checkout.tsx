@@ -164,11 +164,27 @@ const Checkout = () => {
     setLoading(true);
 
     try {
-      // For now, create a single order with all items
-      // TODO: Group by vendor when vendor ID is available in cart context
+      // Get vendor IDs from cart items and group by vendor
+      const vendorGroups = items.reduce((groups: { [key: string]: any[] }, item) => {
+        const vendorId = item.product.vendor_id;
+        if (!groups[vendorId]) {
+          groups[vendorId] = [];
+        }
+        groups[vendorId].push(item);
+        return groups;
+      }, {});
+
+      const vendorIds = Object.keys(vendorGroups);
+      if (vendorIds.length === 0) {
+        throw new Error('No valid vendor found for cart items');
+      }
+
+      // For now, use the first vendor ID (we can enhance this later for multiple vendors)
+      const vendorId = vendorIds[0];
+      
       const orderData = {
         customer_id: user!.id,
-        vendor_id: '00000000-0000-0000-0000-000000000000', // Default vendor for now
+        vendor_id: vendorId,
         total_amount: getCartTotal(),
         payment_method: paymentMethod,
         payment_status: paymentMethod === 'paystack' ? 'pending' : 'pending',
