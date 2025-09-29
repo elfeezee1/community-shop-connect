@@ -47,15 +47,22 @@ const Checkout = () => {
   const [errors, setErrors] = useState<Partial<typeof formData>>({});
 
   useEffect(() => {
+    console.log('Checkout - User:', user ? 'authenticated' : 'not authenticated');
+    console.log('Checkout - Cart items:', items.length);
+    
     if (!user) {
+      console.log('Redirecting to auth - no user');
       navigate("/customer/auth");
       return;
     }
     
     if (items.length === 0) {
+      console.log('Redirecting to cart - no items');
       navigate("/cart");
       return;
     }
+    
+    console.log('Checkout - All checks passed, staying on checkout page');
   }, [user, items, navigate]);
 
   const handleInputChange = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
