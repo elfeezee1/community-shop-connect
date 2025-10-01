@@ -61,35 +61,6 @@ export const Navigation = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {!roleLoading && role === 'customer' && (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <Link to="/customer/dashboard" className="flex items-center">
-                          <UserCircle className="w-4 h-4 mr-2" />
-                          Customer Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/customer/profile" className="flex items-center">
-                          <Settings className="w-4 h-4 mr-2" />
-                          Profile
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/customer/orders" className="flex items-center">
-                          <Package className="w-4 h-4 mr-2" />
-                          Orders
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/contact-us" className="flex items-center">
-                          <Phone className="w-4 h-4 mr-2" />
-                          Contact Us
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  
                   {!roleLoading && role === 'vendor' && (
                     <>
                       <DropdownMenuItem asChild>
@@ -114,6 +85,35 @@ export const Navigation = () => {
                         <Link to="/vendor/profile" className="flex items-center">
                           <UserCircle className="w-4 h-4 mr-2" />
                           Profile
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  
+                  {!roleLoading && role === 'customer' && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/customer/dashboard" className="flex items-center">
+                          <UserCircle className="w-4 h-4 mr-2" />
+                          Customer Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/customer/profile" className="flex items-center">
+                          <Settings className="w-4 h-4 mr-2" />
+                          Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/customer/orders" className="flex items-center">
+                          <Package className="w-4 h-4 mr-2" />
+                          Orders
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/contact-us" className="flex items-center">
+                          <Phone className="w-4 h-4 mr-2" />
+                          Contact Us
                         </Link>
                       </DropdownMenuItem>
                     </>
