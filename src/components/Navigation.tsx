@@ -6,6 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Navigation = () => {
   const { user, signOut } = useAuth();
@@ -52,6 +53,8 @@ export const Navigation = () => {
                 </Link>
               </Button>
             )}
+
+            {user && !roleLoading && role === 'vendor' && <NotificationBell />}
             
             {user ? (
               <DropdownMenu>
