@@ -16,6 +16,20 @@ export const useUserRole = () => {
       }
 
       try {
+        // Check if user is a vendor first
+        const { data: vendorData } = await supabase
+          .from('vendors')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (vendorData) {
+          setRole('vendor');
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise check profiles table for role
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
@@ -26,7 +40,7 @@ export const useUserRole = () => {
           throw error;
         }
 
-        setRole(data?.role || null);
+        setRole(data?.role || 'customer');
       } catch (error) {
         console.error('Error fetching user role:', error);
         setRole(null);
