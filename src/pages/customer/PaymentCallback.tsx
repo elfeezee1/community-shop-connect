@@ -54,9 +54,9 @@ const PaymentCallback = () => {
             description: "Your order has been placed successfully.",
           });
           
-          // Redirect to orders page after 3 seconds
+          // Redirect to cart with success info after 3 seconds
           setTimeout(() => {
-            navigate('/customer/orders');
+            navigate(`/cart?success=true&orderId=${data.orderId}`);
           }, 3000);
         } else {
           setStatus('failed');
@@ -121,8 +121,8 @@ const PaymentCallback = () => {
                     Reference: {orderReference}
                   </p>
                 )}
-                <Button onClick={() => navigate('/customer/orders')}>
-                  View My Orders
+                <Button onClick={() => navigate('/cart')}>
+                  Back to Cart
                 </Button>
               </>
             )}

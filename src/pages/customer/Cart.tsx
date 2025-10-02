@@ -5,13 +5,66 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Minus, Plus, X, ShoppingBag, Package } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Minus, Plus, X, ShoppingBag, Package, CheckCircle } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, getCartTotal, loading } = useCart();
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [loadingOrder, setLoadingOrder] = useState(false);
+
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const orderId = searchParams.get('orderId');
+
+    if (success === 'true' && orderId) {
+      fetchOrderDetails(orderId);
+    }
+  }, [searchParams]);
+
+  const fetchOrderDetails = async (orderId: string) => {
+    setLoadingOrder(true);
+    try {
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            id,
+            quantity,
+            unit_price,
+            total_price,
+            product_id,
+            products (
+              name,
+              images,
+              vendor:vendors (
+                business_name
+              )
+            )
+          )
+        `)
+        .eq('id', orderId)
+        .single();
+
+      if (orderError) throw orderError;
+      setOrderDetails(order);
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+    } finally {
+      setLoadingOrder(false);
+    }
+  };
+
+  const dismissSuccessMessage = () => {
+    setOrderDetails(null);
+    setSearchParams({});
+  };
 
   const getImageUrl = (imagePath: string) => {
     if (!imagePath) return null;
@@ -91,6 +144,76 @@ const Cart = () => {
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {orderDetails && (
+          <Alert className="mb-8 border-green-500 bg-green-50 dark:bg-green-950/20">
+            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <AlertTitle className="text-green-800 dark:text-green-300 font-semibold text-lg">
+              Order Placed Successfully!
+            </AlertTitle>
+            <AlertDescription className="text-green-700 dark:text-green-400 space-y-3">
+              <p className="font-medium">
+                Your payment has been processed and your order has been confirmed.
+              </p>
+              
+              <div className="bg-white/50 dark:bg-black/20 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">Order Reference:</span>
+                  <span className="font-mono">{orderDetails.id.slice(0, 8)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">Total Amount:</span>
+                  <span className="font-bold">₦{orderDetails.total_amount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">Payment Method:</span>
+                  <span className="capitalize">{orderDetails.payment_method}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">Items Ordered:</span>
+                  <span>{orderDetails.order_items?.length || 0} {orderDetails.order_items?.length === 1 ? 'item' : 'items'}</span>
+                </div>
+              </div>
+
+              {orderDetails.order_items && orderDetails.order_items.length > 0 && (
+                <div className="space-y-2">
+                  <p className="font-medium text-sm">Order Details:</p>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {orderDetails.order_items.map((item: any) => (
+                      <div key={item.id} className="bg-white/50 dark:bg-black/20 rounded p-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{item.products.name}</span>
+                          <span>₦{item.total_price.toLocaleString()}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Quantity: {item.quantity} × ₦{item.unit_price.toLocaleString()} • {item.products.vendor.business_name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={dismissSuccessMessage}
+                  className="bg-white dark:bg-black"
+                >
+                  Dismiss
+                </Button>
+                <Button 
+                  size="sm"
+                  asChild
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Link to="/customer/orders">View All Orders</Link>
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Shopping Cart
