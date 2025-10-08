@@ -21,8 +21,11 @@ export const NotificationBell = () => {
     markAsRead(notification.id);
     
     // Navigate based on notification type
-    if (notification.type === 'order' && notification.ride_id) {
+    if (notification.type === 'order') {
       navigate('/vendor/orders');
+    } else if (notification.ride_id) {
+      // Handle ride-related notifications if needed
+      navigate(`/ride/${notification.ride_id}`);
     }
   };
 
