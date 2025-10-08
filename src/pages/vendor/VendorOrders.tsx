@@ -19,10 +19,7 @@ interface Order {
   delivery_phone: string;
   notes: string;
   payment_method: string;
-  profiles: {
-    username: string;
-    phone_number: string;
-  } | null;
+  customer_id: string;
   order_items: Array<{
     id: string;
     quantity: number;
@@ -80,11 +77,16 @@ const VendorOrders = () => {
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
-          *,
-          profiles!orders_customer_id_fkey (
-            username,
-            phone_number
-          ),
+          id,
+          total_amount,
+          order_status,
+          payment_status,
+          created_at,
+          delivery_address,
+          delivery_phone,
+          notes,
+          payment_method,
+          customer_id,
           order_items (
             id,
             quantity,
@@ -96,6 +98,7 @@ const VendorOrders = () => {
               images
             )
           )
+        
         `)
         .eq('vendor_id', vendorData.id)
         .order('created_at', { ascending: false });
@@ -239,7 +242,7 @@ const VendorOrders = () => {
                       <div className="flex items-center text-sm">
                         <User className="w-4 h-4 mr-2 text-muted-foreground" />
                         <span className="font-medium">Customer:</span>
-                        <span className="ml-1">{order.profiles?.username || 'Unknown'}</span>
+                        <span className="ml-1">Private</span>
                       </div>
                       <div className="flex items-center text-sm">
                         <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
