@@ -560,7 +560,7 @@ export type Database = {
     }
     Functions: {
       get_admin_analytics: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_vendors: number
           pending_vendors: number
@@ -574,10 +574,7 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
     }
     Enums: {
       user_role: "customer" | "vendor" | "admin"
