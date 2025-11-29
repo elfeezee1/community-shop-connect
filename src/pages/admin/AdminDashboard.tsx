@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 interface Analytics {
-  total_users: number;
   active_vendors: number;
   total_products: number;
   total_orders: number;
@@ -50,8 +49,10 @@ export default function AdminDashboard() {
         .from('orders')
         .select(`
           *,
-          profiles!orders_customer_id_fkey (username),
-          vendors (business_name)
+          order_items(
+            *,
+            vendor:vendors(business_name)
+          )
         `)
         .order('created_at', { ascending: false })
         .limit(5);
@@ -63,7 +64,7 @@ export default function AdminDashboard() {
       const { data: vendorsData, error: vendorsError } = await supabase
         .from('vendors')
         .select('*')
-        .eq('is_verified', false)
+        .eq('is_approved', false)
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -89,13 +90,6 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    {
-      title: "Total Users",
-      value: analytics?.total_users || 0,
-      icon: Users,
-      color: "text-blue-600",
-      bgColor: "bg-blue-100",
-    },
     {
       title: "Active Vendors",
       value: analytics?.active_vendors || 0,
@@ -128,8 +122,8 @@ export default function AdminDashboard() {
       title: "Pending Vendors",
       value: analytics?.pending_vendors || 0,
       icon: AlertCircle,
-      color: "text-red-600",
-      bgColor: "bg-red-100",
+      color: "text-amber-600",
+      bgColor: "bg-amber-100",
     },
   ];
 

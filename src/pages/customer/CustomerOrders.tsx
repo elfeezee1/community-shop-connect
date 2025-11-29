@@ -12,11 +12,13 @@ interface OrderItem {
   id: string;
   product_id: string;
   quantity: number;
-  unit_price: number;
-  total_price: number;
+  price_at_purchase: number;
   product: {
     name: string;
     images: string[];
+  };
+  vendor: {
+    business_name: string;
   };
 }
 
@@ -26,15 +28,9 @@ interface Order {
   payment_status: string;
   payment_method: string;
   order_status: string;
-  delivery_address: string;
-  delivery_phone: string;
-  notes: string | null;
+  shipping_address: string;
+  phone_number: string;
   created_at: string;
-  vendor: {
-    business_name: string;
-    city: string;
-    state: string;
-  };
   order_items: OrderItem[];
 }
 
@@ -56,13 +52,13 @@ const CustomerOrders = () => {
         .from('orders')
         .select(`
           *,
-          vendor:vendors(business_name, city, state),
           order_items(
             *,
-            product:products(name, images)
+            product:products(name, images),
+            vendor:vendors(business_name)
           )
         `)
-        .eq('customer_id', user?.id)
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -155,15 +151,9 @@ const CustomerOrders = () => {
                           {format(new Date(order.created_at), 'MMM dd, yyyy')}
                         </div>
                         <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {order.vendor.business_name}
+                          <Phone className="w-4 h-4 mr-1" />
+                          {order.phone_number}
                         </div>
-                        {order.delivery_phone && (
-                          <div className="flex items-center">
-                            <Phone className="w-4 h-4 mr-1" />
-                            {order.delivery_phone}
-                          </div>
-                        )}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -196,12 +186,12 @@ const CustomerOrders = () => {
                           <div>
                             <h4 className="font-medium">{item.product.name}</h4>
                             <p className="text-sm text-muted-foreground">
-                              Qty: {item.quantity} × ₦{item.unit_price.toLocaleString()}
+                              Qty: {item.quantity} × ₦{item.price_at_purchase.toLocaleString()}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold">₦{item.total_price.toLocaleString()}</p>
+                          <p className="font-semibold">₦{(item.price_at_purchase * item.quantity).toLocaleString()}</p>
                         </div>
                       </div>
                     ))}
@@ -211,13 +201,7 @@ const CustomerOrders = () => {
                     <div className="flex flex-col sm:flex-row justify-between gap-4">
                       <div className="text-sm">
                         <p className="text-muted-foreground mb-1">Delivery Address:</p>
-                        <p className="font-medium">{order.delivery_address}</p>
-                        {order.notes && (
-                          <>
-                            <p className="text-muted-foreground mt-2 mb-1">Notes:</p>
-                            <p className="text-sm">{order.notes}</p>
-                          </>
-                        )}
+                        <p className="font-medium">{order.shipping_address}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-muted-foreground text-sm mb-1">Total Amount</p>
