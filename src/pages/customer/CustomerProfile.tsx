@@ -11,9 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { User } from "lucide-react";
 
 interface Profile {
-  username: string;
+  full_name: string;
   phone_number: string;
-  bio: string;
+  address: string;
 }
 
 const CustomerProfile = () => {
@@ -21,9 +21,9 @@ const CustomerProfile = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<Profile>({
-    username: "",
+    full_name: "",
     phone_number: "",
-    bio: ""
+    address: ""
   });
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const CustomerProfile = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username, phone_number, bio')
+        .select('full_name, phone_number, address')
         .eq('user_id', user?.id)
         .single();
 
@@ -46,9 +46,9 @@ const CustomerProfile = () => {
 
       if (data) {
         setProfile({
-          username: data.username || "",
+          full_name: data.full_name || "",
           phone_number: data.phone_number || "",
-          bio: data.bio || ""
+          address: data.address || ""
         });
       }
     } catch (error) {
@@ -66,9 +66,9 @@ const CustomerProfile = () => {
         .from('profiles')
         .upsert({
           user_id: user.id,
-          username: profile.username,
+          full_name: profile.full_name,
           phone_number: profile.phone_number,
-          bio: profile.bio,
+          address: profile.address,
           role: 'customer'
         });
 
@@ -126,12 +126,12 @@ const CustomerProfile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="full_name">Full Name</Label>
                 <Input
-                  id="username"
-                  value={profile.username}
-                  onChange={(e) => setProfile({ ...profile, username: e.target.value })}
-                  placeholder="Enter your username"
+                  id="full_name"
+                  value={profile.full_name}
+                  onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                  placeholder="Enter your full name"
                   required
                 />
               </div>
@@ -148,12 +148,12 @@ const CustomerProfile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
+                <Label htmlFor="address">Address</Label>
                 <Textarea
-                  id="bio"
-                  value={profile.bio}
-                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                  placeholder="Tell us about yourself"
+                  id="address"
+                  value={profile.address}
+                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                  placeholder="Enter your address"
                   rows={4}
                 />
               </div>

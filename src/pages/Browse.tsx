@@ -19,8 +19,7 @@ interface Product {
   images: string[];
   vendor: {
     business_name: string;
-    city: string;
-    state: string;
+    business_address: string;
   };
   category?: {
     name: string;
@@ -50,14 +49,13 @@ const Browse = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error} = await supabase
         .from('products')
         .select(`
           *,
           vendor:vendors (
             business_name,
-            city,
-            state
+            business_address
           ),
           category:categories (
             name
@@ -231,7 +229,7 @@ const Browse = () => {
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground">
                       <MapPin className="w-3 h-3 mr-1" />
-                      {product.vendor.city}, {product.vendor.state}
+                      {product.vendor.business_address}
                     </div>
                   </div>
                   <div className="flex gap-2 mt-4">

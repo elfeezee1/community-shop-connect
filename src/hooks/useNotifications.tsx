@@ -9,7 +9,7 @@ export interface Notification {
   type: string;
   is_read: boolean;
   created_at: string;
-  ride_id: string | null;
+  order_id?: string | null;
 }
 
 export const useNotifications = () => {

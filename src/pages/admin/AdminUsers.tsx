@@ -10,7 +10,7 @@ import { Search, Users, Mail, Calendar, Edit, Shield } from "lucide-react";
 
 interface User {
   user_id: string;
-  username: string;
+  full_name: string;
   role: string;
   created_at: string;
   updated_at: string;
@@ -35,7 +35,7 @@ export default function AdminUsers() {
 
     if (searchQuery) {
       filtered = filtered.filter(user =>
-        user.username.toLowerCase().includes(searchQuery.toLowerCase())
+        user.full_name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -50,7 +50,7 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, user_id, full_name, phone_number, address, role, created_at, updated_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -135,7 +135,7 @@ export default function AdminUsers() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Search users by username..."
+                placeholder="Search users by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -175,10 +175,10 @@ export default function AdminUsers() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
-                      {user.username.charAt(0).toUpperCase()}
+                      {user.full_name?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">{user.username}</h3>
+                      <h3 className="font-semibold text-foreground">{user.full_name || 'Unnamed User'}</h3>
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <Calendar className="w-3 h-3" />
                         <span>Joined {new Date(user.created_at).toLocaleDateString()}</span>

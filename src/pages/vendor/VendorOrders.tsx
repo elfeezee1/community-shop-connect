@@ -15,17 +15,14 @@ interface Order {
   order_status: string;
   payment_status: string;
   created_at: string;
-  delivery_address: string;
-  delivery_phone: string;
-  notes: string;
+  shipping_address: string;
+  phone_number: string;
   payment_method: string;
-  customer_id: string;
   order_items: Array<{
     id: string;
     quantity: number;
-    unit_price: number;
-    total_price: number;
-    products: {
+    price_at_purchase: number;
+    product: {
       id: string;
       name: string;
       images: string[];
@@ -73,39 +70,53 @@ const VendorOrders = () => {
 
       setVendor(vendorData);
 
-      // Fetch orders for this vendor
+      // Fetch orders for this vendor through order_items
       const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
+        .from('order_items')
         .select(`
-          id,
-          total_amount,
-          order_status,
-          payment_status,
-          created_at,
-          delivery_address,
-          delivery_phone,
-          notes,
-          payment_method,
-          customer_id,
-          order_items (
+          order_id,
+          quantity,
+          price_at_purchase,
+          product:products (
             id,
-            quantity,
-            unit_price,
-            total_price,
-            products (
-              id,
-              name,
-              images
-            )
+            name,
+            images
+          ),
+          order:orders (
+            id,
+            total_amount,
+            order_status,
+            payment_status,
+            created_at,
+            shipping_address,
+            phone_number,
+            payment_method
           )
-        
         `)
         .eq('vendor_id', vendorData.id)
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
 
-      setOrders((ordersData as any) || []);
+      // Group order items by order_id
+      const ordersMap = new Map();
+      ordersData?.forEach((item: any) => {
+        const orderId = item.order.id;
+        if (!ordersMap.has(orderId)) {
+          ordersMap.set(orderId, {
+            ...item.order,
+            order_items: []
+          });
+        }
+        ordersMap.get(orderId).order_items.push({
+          id: item.order_id,
+          quantity: item.quantity,
+          price_at_purchase: item.price_at_purchase,
+          product: item.product
+        });
+      });
+
+      setOrders(Array.from(ordersMap.values()));
     } catch (error: any) {
       console.error('Error fetching vendor orders:', error);
       toast({
@@ -247,12 +258,12 @@ const VendorOrders = () => {
                       <div className="flex items-center text-sm">
                         <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
                         <span className="font-medium">Address:</span>
-                        <span className="ml-1">{order.delivery_address}</span>
+                        <span className="ml-1">{order.shipping_address}</span>
                       </div>
-                      {order.delivery_phone && (
+                      {order.phone_number && (
                         <div className="flex items-center text-sm">
                           <span className="font-medium">Phone:</span>
-                          <span className="ml-1">{order.delivery_phone}</span>
+                          <span className="ml-1">{order.phone_number}</span>
                         </div>
                       )}
                     </div>
@@ -281,35 +292,25 @@ const VendorOrders = () => {
                       {order.order_items.map((item) => (
                         <div key={item.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                           <div className="flex items-center space-x-3">
-                            {item.products?.images?.[0] && (
+                            {item.product?.images?.[0] && (
                               <img 
-                                src={item.products.images[0]} 
-                                alt={item.products.name}
+                                src={`https://ynemuryyfmaakfelazef.supabase.co/storage/v1/object/public/product-images/${item.product.images[0]}`}
+                                alt={item.product.name}
                                 className="w-12 h-12 object-cover rounded"
                               />
                             )}
                             <div>
-                              <p className="font-medium">{item.products?.name}</p>
+                              <p className="font-medium">{item.product?.name}</p>
                               <p className="text-sm text-muted-foreground">
-                                Quantity: {item.quantity} × ₦{item.unit_price.toLocaleString()}
+                                Quantity: {item.quantity} × ₦{item.price_at_purchase.toLocaleString()}
                               </p>
                             </div>
                           </div>
-                          <p className="font-semibold">₦{item.total_price.toLocaleString()}</p>
+                          <p className="font-semibold">₦{(item.price_at_purchase * item.quantity).toLocaleString()}</p>
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  {/* Notes */}
-                  {order.notes && (
-                    <div>
-                      <h4 className="font-medium mb-2">Customer Notes:</h4>
-                      <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                        {order.notes}
-                      </p>
-                    </div>
-                  )}
 
                   {/* Action Buttons */}
                   {order.order_status !== 'delivered' && order.order_status !== 'cancelled' && (
